@@ -1,0 +1,31 @@
+{% extends "dashboard/dashboard.html" %}
+
+{% block title %}
+    Dashboard - Home
+{% endblock %}
+
+{% block right_section %}
+	<ul class="nav nav-tabs">
+		<li class="active"><a data-toggle="tab" href="#my-orgs">My Organizations</a></li>
+		<li><a data-toggle="tab" href="#guide">Guide</a></li>
+	</ul>
+
+	<div class="tab-content">
+		<div id="my-orgs" class="tab-pane fade in active">
+			{% if user_orgs|length < 1 %}
+				<h2>You do not have any organizations :(</h2>
+				<p>Click on "Create New Organization", on the left-panel, to create one.</p>
+			{% else %}
+				<h2>My Organizations</h2>
+				<ol>
+					{% for org in user_orgs %}
+						<li><a href="{{ url_for('organization', handle=org.handle) }}">{{ org.title }}</a></li>
+					{% endfor %}
+				</ol>
+			{% endif %}
+		</div>
+		<div id="guide" class="tab-pane fade">
+			{% include 'dashboard/guide.html' %}
+		</div>
+	</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block main %}
+	<div class="row">
+		<aside class="col-md-4">
+			<h3>Menu</h3>
+			<ul>
+				<li><a href="{{ url_for('dashboard') }}/new_organization">Create New Organization</a></li>
+				<li><a href="{{ url_for('dashboard') }}/account">Account Settings</a></li>
+			</ul>
+		</aside>
+
+		<section class="col-md-8">
+			{% block right_section %}
+			{% endblock %}
+		</section>
+	</div>
+{% endblock %}

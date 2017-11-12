@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	{{ organization.title }}
+{% endblock %}
+
+{% block main %}
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Students</h3>
+			<p>After adding your classes/grades, you can start adding students.</p>
+			<ul>
+				<li><a href="#">Add New Student(s)</a></li>
+				<li><a href="#">Modify Existing Student Record</a></li>
+			</ul>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Tests</h3>
+			<p>Now that you have added subjects and all students of a class, you are now ready to add tests. This will give you access to student performance and monthly results.</p>
+			<ul>
+				<li><a href="#">Add New Test Records</a></li>
+				<li><a href="#">Modify Existing Test Records</a></li>
+			</ul>
+		</section>
+	</div>
+
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Fees</h3>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Classes</h3>
+			<p>These are your classes, otherwise known as grades. These are also your courses and degrees. Name them as precisely as possible. For example, Class/Grade 9th - Section A, or Web Developement Course - Morning, or BSCS F16 M.</p>
+			<ul>
+				<li>Create New Class(es)</li>
+				<li>Modify Existing Class(es)</li>
+			</ul>
+		</section>
+	</div>
+
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Subjects</h3>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Staff</h3>
+			<p>Coming soon</p>
+		</section>
+	</div>
+{% endblock %}

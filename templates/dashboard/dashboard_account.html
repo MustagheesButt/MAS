@@ -1,0 +1,15 @@
+{% extends "dashboard/dashboard.html" %}
+
+{% block title %}
+    Account Settings
+{% endblock %}
+
+{% block right_section %}
+	<h2>Account Settings</h2>
+	
+	<h3>My Organizations</h3>
+	
+	{% for org in user_orgs %}
+		<li>{{ org.title }}</li>
+	{% endfor %}
+{% endblock %}

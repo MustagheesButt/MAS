@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	Create New Class
+{% endblock %}
+
+{% block main %}
+	<h2>Create a New Class</h2>
+	<p>This can be a class/grade or a course, etc.</p>
+
+	<form class="form-horizontal" action="{{ url_for('organization_classes', handle=handle, action='new') }}" method="POST">
+	  <fieldset>
+	    <div class="control-group">
+	      <!-- Name/Title -->
+	      <label class="control-label"  for="name">Name/Title</label>
+	      <div class="controls">
+	        <input type="text" id="name" name="name" placeholder="Name" class="input-xlarge form-control" required>
+	        <p class="help-block">Whatever you would like to call this class. For example, <em>Class 7th</em>, <em>First Year - Section A</em>, or <em>Computer Short Course - Evening</em>.</p>
+	      </div>
+	    </div>
+	 
+	    <div class="control-group">
+	      <!-- Starting date of the class -->
+	      <label class="control-label"  for="start_date">Start Date</label>
+	      <div class="controls">
+	        <input type="date" id="start_date" name="start_date" placeholder="Y/M/d" class="input-xlarge form-control">
+	        <p class="help-block">When is this class going to start.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Ending date of the class -->
+	      <label class="control-label"  for="end_date">End Date</label>
+	      <div class="controls">
+	        <input type="date" id="end_date" name="end_date" placeholder="Y/M/d" class="input-xlarge form-control">
+	        <p class="help-block">When is this class going to end.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Fee -->
+	      <label class="control-label"  for="fee">Monthly Fee</label>
+	      <div class="controls">
+	        <input type="number" id="fee" name="fee" placeholder="Fee" class="input-xlarge form-control" required>
+	        <p class="help-block">Whatever you are charging monthly.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Starting Time of the class -->
+	      <label class="control-label"  for="start_time">Start Time</label>
+	      <div class="controls">
+	        <input type="time" id="start_time" name="start_time" placeholder="H:M" class="input-xlarge form-control">
+	        <p class="help-block">Daily starting time of the class.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Ending Time of the class -->
+	      <label class="control-label"  for="end_time">End Time</label>
+	      <div class="controls">
+	        <input type="time" id="end_time" name="end_time" placeholder="H:M" class="input-xlarge form-control">
+	        <p class="help-block">Daily ending time of the class.</p>
+	      </div>
+	    </div>
+	 
+	    <div class="control-group">
+	      <!-- Button -->
+	      <div class="controls">
+	        <button class="btn btn-success">Create</button>
+	      </div>
+	    </div>
+	  </fieldset>
+	</form>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	{{ organization.title }}
+{% endblock %}
+
+{% block main %}
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Students <small>{{ n_students }}</small></h3>
+			{% if n_classes < 1 %}
+				<p>Since you haven't created any classes yet, you can't add any students. Try creating a class first! :)</p>
+			{% else %}
+				<ul>
+					<li><a href="{{ url_for('organization_students', handle=organization.handle, action='new') }}">Add New Student(s)</a></li>
+					<li><a href="{{ url_for('organization_students', handle=organization.handle, action='modify') }}">Modify Existing Student Record</a></li>
+					<li><a href="{{ url_for('organization_students', handle=organization.handle, action='view') }}">View Student Records</a></li>
+				</ul>
+			{% endif %}
+		</section>
+
+		<section class="col-md-6">
+			<h3>Tests</h3>
+			{% if n_students < 1 %}
+				<p>Looks like you haven't added any students yet. To start adding test records, you must first add the students, right? After adding students, you will need to add subjects.</p>
+			{% elif n_subjects < 1 %}
+				<p>You haven't added any subjects yet. The tests have a subject, so you need to define the subjects you have first.</p>
+			{% else %}
+				<ul>
+					<li><a href="#">Add New Test Records</a></li>
+					<li><a href="#">Modify Existing Test Records</a></li>
+					<li><a href="#">View Test Records</a></li>
+				</ul>
+			{% endif %}
+		</section>
+	</div>
+
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Fees</h3>
+			<ul>
+				<li><a href="#">Add New Fee Record(s)</a></li>
+				<li><a href="#">Modify Existing Fee Record(s)</a></li>
+				<li><a href="#">View Fee Records</a></li>
+			</ul>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Classes <small>{{ n_classes }}</small></h3>
+			<p>These are your classes, otherwise known as grades. These are also your courses and degrees. Name them as precisely as possible. For example, <em>Class/Grade 9th - Section A</em>, or <em>Web Developement Course - Morning</em>, or <em>BSCS F16 M</em>.</p>
+			<ul>
+				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='new') }}">Create New Class(es)</a></li>
+				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='modify') }}">Modify Existing Class(es)</a></li>
+				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='view') }}">View Class Records</a></li>
+			</ul>
+		</section>
+	</div>
+
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Subjects <small>{{ n_subjects }}</small></h3>
+			<ul>
+				<li><a href="#">Add New Subject(s)</a></li>
+				<li><a href="#">Modify Existing Subjects</a></li>
+				<li><a href="#">View Subject Statistics</a></li>
+			</ul>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Staff</h3>
+			<p>Coming soon</p>
+		</section>
+	</div>
+{% endblock %}

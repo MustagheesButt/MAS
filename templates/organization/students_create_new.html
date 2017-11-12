@@ -1,0 +1,327 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	Create New Student(s)
+{% endblock %}
+
+{% block main %}
+	<h2>Create New Student(s)</h2>
+
+	<div class="container">
+		<h3>Global Modifiers</h3>
+
+		<div class="row">
+			<div class="col-md-3">
+				<div class="control-group">
+			      <!-- Count Selector -->
+			      <label class="control-label"  for="count">How many students to add?</label>
+			      <div class="controls">
+			        <input type="number" id="count" name="count" class="input-xlarge form-control" min="1" max="20" value="1" data-entity="student" />
+			        <p class="help-block">You can add upto a maximum of 20 students at a time.</p>
+			      </div>
+			    </div>
+			</div>
+
+			<div class="col-md-3">
+				<div class="control-group">
+			      <!-- Class Selector -->
+			      <label class="control-label"  for="class">Select a Class</label>
+			      <div class="controls">
+			        <select name="class" class="input-xlarge form-control">
+			        	<option selected="selected">Not Set</option>
+			        	{% for class in classes %}
+			        		<option value="{{ class.id }}">{{ class.name }}</option>
+			        	{% endfor %}
+			        </select>
+			        <p class="help-block"></p>
+			      </div>
+			    </div>
+			</div>
+	    </div>
+	</div>
+	<hr/>
+
+	<form class="form-horizontal" action="{{ url_for('organization_students', handle=handle, action='new') }}" method="POST">
+		<div class="append-to">
+			<fieldset class="to-repeat">
+			  	<h3 class="entity-number" style="text-transform: capitalize;">student 1</h3>
+			  	
+			  	<div class="row">
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- First Name -->
+					      <label class="control-label"  for="first_name">First Name</label>
+					      <div class="controls">
+					        <input type="text" id="first_name" name="first_name[]" placeholder="First Name" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Middle Name -->
+					      <label class="control-label"  for="middle_name">Middle Name</label>
+					      <div class="controls">
+					        <input type="text" id="middle_name" name="middle_name[]" placeholder="Middle Name" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Last Name -->
+					      <label class="control-label"  for="last_name">Last Name</label>
+					      <div class="controls">
+					        <input type="text" id="last_name" name="last_name[]" placeholder="Last Name" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+			  	</div>
+
+			  	<div class="row">
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Class -->
+					      <label class="control-label"  for="class">Class</label>
+					      <div class="controls">
+					        <select name="class[]" class="input-xlarge form-control" required>
+					        	{% for class in classes %}
+					        		<option value="{{ class.id }}">{{ class.name }}</option>
+					        	{% endfor %}
+					        </select>
+					        <p class="help-block">The class student is enrolling in.</p>
+					      </div>
+						</div>
+			  		</div>
+
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Gender -->
+					      <label class="control-label"  for="gender">Gender</label>
+					      <div class="controls">
+					        <select name="gender[]" class="input-xlarge form-control" required>
+					        	<option value="M">Male</option>
+					        	<option value="F">Female</option>
+					        	<option value="O">Others</option>
+					        </select>
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+			  		</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-4">
+						<div class="control-group">
+					      <!-- CNIC/B-form -->
+					      <label class="control-label"  for="cnic_bform">CNIC/B-form</label>
+					      <div class="controls">
+					        <input type="text" id="cnic_bform" name="cnic[]" placeholder="CNIC or B-form number" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="control-group">
+					      <!-- Birth date -->
+					      <label class="control-label"  for="date_of_birth">Date of Birth</label>
+					      <div class="controls">
+					        <input type="date" id="date_of_birth" name="DOB[]" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="control-group">
+					      <!-- Date of Admission -->
+					      <label class="control-label"  for="admitted_on">Admitted On</label>
+					      <div class="controls">
+					        <input type="date" id="admitted_on" name="admitted_on[]" class="input-xlarge form-control" value="{{ now }}">
+					        <p class="help-block">Date of Admission</p>
+					      </div>
+						</div>
+					</div>
+				</div>
+
+			    <div class="row">
+			    	<div class="col-md-4">
+			    		<div class="control-group">
+					      <!-- Mailing/Physical Address -->
+					      <label class="control-label" for="address">Address</label>
+					      <div class="controls">
+					        <input type="text" id="address" name="address[]" placeholder="Address" class="input-xlarge form-control" required>
+					        <p class="help-block">Permanent residential address.</p>
+					      </div>
+						</div>
+			    	</div>
+
+			    	<div class="col-md-4">
+			    		<div class="control-group">
+					      <!-- Country -->
+					      <label class="control-label"  for="country">Country</label>
+					      <div class="controls">
+					        <select name="country[]" class="input-xlarge form-control" required>
+					        	{% include 'components/countries.html' %}
+					        </select>
+					        <p class="help-block">Nationality of the Student</p>
+					      </div>
+						</div>
+			    	</div>
+
+			    	<div class="col-md-4">
+			    		<div class="control-group">
+					      <!-- City -->
+					      <label class="control-label"  for="city">City</label>
+					      <div class="controls">
+					        <input type="text" id="city" name="city[]" placeholder="City" class="input-large form-control" required>
+					        <p class="help-block">City of permanent residence</p>
+					      </div>
+						</div>
+			    	</div>
+			    </div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="control-group">
+					      <!-- Email -->
+					      <label class="control-label"  for="email">E-mail</label>
+					      <div class="controls">
+					        <input type="email" id="email" name="email[]" placeholder="Email" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<div class="control-group">
+					      <!-- Phone -->
+					      <label class="control-label"  for="phone">Phone/Mobile Number</label>
+					      <div class="controls">
+					        <input type="tel" id="phone" name="phone[]" placeholder="Phone Number" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+				</div>
+
+				<hr/>
+				<!-- Parents/Guardians Info -->
+				<h4>Parents/Guardians</h4>
+				<div class="row">
+					<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- First Name -->
+					      <label class="control-label"  for="guardian_first_name">First Name</label>
+					      <div class="controls">
+					        <input type="text" id="guardian_first_name" name="guardian_first_name[]" placeholder="Guardian's First Name" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Middle Name -->
+					      <label class="control-label"  for="guardian_middle_name">Middle Name</label>
+					      <div class="controls">
+					        <input type="text" id="guardian_middle_name" name="guardian_middle_name[]" placeholder="Guardian's Middle Name" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+
+			  		<div class="col-md-4">
+			  			<div class="control-group">
+					      <!-- Last Name -->
+					      <label class="control-label"  for="guardian_last_name">Last Name</label>
+					      <div class="controls">
+					        <input type="text" id="guardian_last_name" name="guardian_last_name[]" placeholder="Guardian's Last Name" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+					    </div>
+			  		</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="control-group">
+					      <!-- CNIC/B-form -->
+					      <label class="control-label"  for="guardian_cnic">Guardian's CNIC</label>
+					      <div class="controls">
+					        <input type="text" id="guardian_cnic" name="guardian_cnic[]" placeholder="CNIC" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-4">
+						<div class="control-group">
+					      <!-- Relation -->
+					      <label class="control-label"  for="guardian_relation">Relation</label>
+					      <div class="controls">
+					        <select type="text" id="guardian_relation" name="guardian_relation[]" class="input-xlarge form-control" required>
+					        	<option value="father" selected>Father</option>
+					        	<option value="mother">Mother</option>
+					        	<option value="brother">Brother</option>
+					        	<option value="sister">Sister</option>
+					        	<option value="uncle">Uncle</option>
+					        	<option value="auntie">Auntie</option>
+					        </select>
+					        <p class="help-block">Guardian's relation with the student.</p>
+					      </div>
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="control-group">
+					      <!-- Occupation -->
+					      <label class="control-label"  for="guardian_occupation">Guardian's Occupation</label>
+					      <div class="controls">
+					        <input type="text" id="guardian_occupation" name="guardian_occupation[]" placeholder="Occupation" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="control-group">
+					      <!-- Email -->
+					      <label class="control-label"  for="guardian_email">Guardian's E-mail</label>
+					      <div class="controls">
+					        <input type="email" id="guardian_email" name="guardian_email[]" placeholder="Guardian's E-mail" class="input-xlarge form-control">
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<div class="control-group">
+					      <!-- Phone -->
+					      <label class="control-label"  for="guardian_phone">Phone/Mobile Number</label>
+					      <div class="controls">
+					        <input type="tel" id="guardian_phone" name="guardian_phone[]" placeholder="Phone Number" class="input-xlarge form-control" required>
+					        <p class="help-block"></p>
+					      </div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+
+		<div class="control-group">
+			<!-- Button -->
+			<div class="controls">
+				<button class="btn btn-success">Add</button>
+			</div>
+		</div>
+	</form>
+{% endblock %}

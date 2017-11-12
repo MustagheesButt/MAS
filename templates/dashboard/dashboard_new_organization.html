@@ -1,0 +1,100 @@
+{% extends "dashboard/dashboard.html" %}
+
+{% block title %}
+    Create New Organization
+{% endblock %}
+
+{% block right_section %}
+	<h2>Create a New Organization</h2>
+
+	<form class="form-horizontal" action="{{ url_for('dashboard_new_organization') }}" method="POST">
+	  <fieldset>
+	    <div class="control-group">
+	      <!-- Title -->
+	      <label class="control-label"  for="title">Organization Title</label>
+	      <div class="controls">
+	        <input type="text" id="title" name="title" placeholder="Organization's Title" class="input-xlarge form-control" required>
+	        <p class="help-block">The official name of your school, academy, college or other institute.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Title -->
+	      <label class="control-label"  for="handle">Organization Handle</label>
+	      <div class="controls">
+	        <input type="text" id="handle" name="handle" placeholder="Organization's Handle" class="input-xlarge form-control" required>
+	        <p class="help-block">Acts like a unique username. Similar to the title, but without any special characters, and in lowercase.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Type -->
+	      <label class="control-label" for="type">Type of Organization</label>
+	      <div class="controls">
+	        <select type="text" id="type" name="type" class="input-xlarge form-control" required>
+	        	<option value="SCHL">School</option>
+	        	<option value="COLG">College</option>
+	        	<option value="ACDM">Academy</option>
+	        	<option value="OTHR">Special Institute</option>
+	        	<option value="UNIV">University</option>
+	        </select>
+	        <p class="help-block">The category under which this organization falls.</p>
+	      </div>
+	    </div>
+	 
+	    <div class="control-group">
+	      <!-- E-mail -->
+	      <label class="control-label" for="email">Organization e-mail</label>
+	      <div class="controls">
+	        <input type="text" id="email" name="email" placeholder="E-mail" class="input-xlarge form-control" required>
+	        <p class="help-block">Any official e-mail address of your organization.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Phone number -->
+	      <label class="control-label" for="phone">Contact Number</label>
+	      <div class="controls">
+	        <input type="text" id="phone" name="phone" placeholder="Phone/Mobile Number" class="input-xlarge form-control" required>
+	        <p class="help-block">Your official phone or mobile number.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Mailing/Physical Address -->
+	      <label class="control-label" for="address">Address</label>
+	      <div class="controls">
+	        <input type="text" id="address" name="address" placeholder="Address" class="input-xlarge form-control" required>
+	        <p class="help-block">The mailing address of your organization. Usually your office address.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- Country -->
+	      <label class="control-label" for="country">Country</label>
+	      <div class="controls">
+	        <select type="text" id="country" name="country" class="input-xlarge form-control" required>
+	        	{% include 'components/countries.html' %}
+	        </select>
+	        <p class="help-block">The country where this organization (or this branch) is located.</p>
+	      </div>
+	    </div>
+
+	    <div class="control-group">
+	      <!-- City -->
+	      <label class="control-label" for="city">City</label>
+	      <div class="controls">
+	        <input type="text" id="city" name="city" placeholder="City" class="input-xlarge form-control" required>
+	        <p class="help-block">The city where this organization (or this branch) is located.</p>
+	      </div>
+	    </div>
+	 
+	    <div class="control-group">
+	      <!-- Button -->
+	      <div class="controls">
+	        <button class="btn btn-success" type="submit">Create</button>
+	      </div>
+	    </div>
+	  </fieldset>
+	</form>
+{% endblock %}
