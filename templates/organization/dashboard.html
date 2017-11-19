@@ -27,9 +27,17 @@
 				<p>You haven't added any subjects yet. The tests have a subject, so you need to define the subjects you have first.</p>
 			{% else %}
 				<ul>
-					<li><a href="#">Add New Test Records</a></li>
-					<li><a href="#">Modify Existing Test Records</a></li>
-					<li><a href="#">View Test Records</a></li>
+					<li>Add New Test Records
+					<form action="{{ url_for('organization_tests', handle=organization.handle, action='new') }}" method="GET">
+						<select name="class_id">
+							<option value="1">Class 7th</option>
+						</select>
+
+						<button class="btn btn-primary">Go</button>
+					</form>
+					</li>
+					<li><a href="{{ url_for('organization_tests', handle=organization.handle, action='modify') }}">Modify Existing Test Records</a></li>
+					<li><a href="{{ url_for('organization_tests', handle=organization.handle, action='view') }}">View Test Records</a></li>
 				</ul>
 			{% endif %}
 		</section>
@@ -60,9 +68,9 @@
 		<section class="col-md-6">
 			<h3>Subjects <small>{{ n_subjects }}</small></h3>
 			<ul>
-				<li><a href="#">Add New Subject(s)</a></li>
-				<li><a href="#">Modify Existing Subjects</a></li>
-				<li><a href="#">View Subject Statistics</a></li>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='new') }}">Add New Subject(s)</a></li>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='modify') }}">Modify Existing Subjects</a></li>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='view') }}">View Subject Statistics</a></li>
 			</ul>
 		</section>
 

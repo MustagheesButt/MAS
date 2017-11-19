@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	Subject Statistics
+{% endblock %}
+
+{% block main %}
+	<h1>Subject Stats</h1>
+	{% if subjects|length < 1 %}
+		<h3>Nothing to see here :(</h3>
+		<p>You probably haven't added any subjects yet!</p>
+	{% else %}
+		{% for subject in subjects %}
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6"><h2>{{ subject.title }}</h2></div>
+					<p>Graph showing success of this subject for each class</p>
+				</div>
+
+				<button class="btn btn-info">See Details</button>
+				<hr/>
+			</div>
+		{% endfor %}
+	{% endif %}
+{% endblock %}

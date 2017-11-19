@@ -12,16 +12,18 @@
 		{% for student in students %}
 			<div class="container">
 				<div class="row">
-					<div class="col-md-6"><h2>{{ student.first_name + " " + student.last_name }}</h2></div>
+					<div class="col-md-6 text-capitalize"><h2>{{ student.first_name + " " + student.last_name }}</h2></div>
 				</div>
 
 				<div class="row">
 					<div class="col-md-4">
-						<h3><small>{{ student.class_id }} &ndash; {{ student.email or "<em>No E-mail provided</em>" }}</small></h3>
+						<h3><small>{{ classes[student.class_id - 1].name }} &ndash; {{ student.email or "<em>No E-mail provided</em>"|safe }}</small></h3>
 					</div>
 				</div>
 
-				<button class="btn btn-info">See Details</button>
+				<a href="{{ url_for('organization_students', handle=handle, action='view', student_id=student.id) }}">
+					<button class="btn btn-info">See Details</button>
+				</a>
 				<hr/>
 			</div>
 		{% endfor %}

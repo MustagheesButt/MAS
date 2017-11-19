@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	New Test Records
+{% endblock %}
+
+{% block main %}
+	<h2>Add New Test Records</h2>
+	<p>One of the subjects that is being taught at your institute.</p>
+
+	<div class="container">
+		<h3>Global Modifiers</h3>
+
+		<div class="row">
+			<div class="col-md-3">
+				<div class="control-group">
+			      <!-- Subject Selector -->
+			      <label class="control-label">Subject</label>
+			      <div class="controls">
+			        <select class="input-xlarge form-control" data-bindto=".subject">
+			        	{% for subject in subjects %}
+			        		<option value="{{ subject.id }}">{{ subject.title }}</option>
+			        	{% endfor %}
+			        </select>
+			        <p class="help-block">The subject of the test.</p>
+			      </div>
+			    </div>
+			</div>
+
+
+			<div class="col-md-3">
+			    <div class="control-group">
+			      <!-- Total Marks -->
+			      <label class="control-label">Total Marks</label>
+			      <div class="controls">
+			        <input type="number" class="input-xlarge form-control" data-bindto=".total" min="1" />
+			        <p class="help-block">Total Marks of the test.</p>
+			      </div>
+			    </div>
+			</div>
+
+			<div class="col-md-3">
+			    <div class="control-group">
+			      <!-- Test Date -->
+			      <label class="control-label">Test Date</label>
+			      <div class="controls">
+			        <input type="date" class="input-xlarge form-control" value="{{ now }}" data-bindto=".test_date" />
+			        <p class="help-block">The date this test was taken on.</p>
+			      </div>
+			    </div>
+			</div>
+	    </div>
+	</div>
+	<hr/>
+
+	<form class="form-horizontal" action="{{ url_for('organization_tests', handle=handle, action='new') }}" method="POST">
+		<div class="row">
+			<div class="col-md-3">Name</div>
+
+			<div class="col-md-2">Obtained Marks</div>
+
+			<div class="col-md-2">Total Marks</div>
+
+			<div class="col-md-3">Subject</div>
+
+			<div class="col-md-2">Test Date</div>
+		</div>
+
+		<div>
+		{% for student in students %}
+		  <fieldset class="row">
+		    <div class="control-group" style="display: none;">
+		      <!-- ID -->
+		      <label class="control-label" for="id"></label>
+		      <div class="controls">
+		        <input type="hidden" name="id[]" value="{{ student.id }}" class="input-xlarge form-control" required>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+
+		    <div class="control-group col-md-3">
+		      <!-- Name -->
+		      <label class="control-label" for="name"></label>
+		      <div class="controls">
+		        <input type="text" value="{{ student.first_name }} {{ student.last_name }}" class="name input-xlarge form-control" readonly>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+
+		    <div class="control-group col-md-2">
+		      <!-- Obtained Marks -->
+		      <label class="control-label" for="obtained"></label>
+		      <div class="controls">
+		        <input type="number" name="obtained[]" placeholder="Obtained Marks" class="obtained input-xlarge form-control" min="1" required>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+
+		    <div class="control-group col-md-2">
+		      <!-- Total Marks -->
+		      <label class="control-label" for="total"></label>
+		      <div class="controls">
+		        <input type="number" name="total[]" placeholder="Total Marks" class="total input-xlarge form-control" min="1" required>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+
+		    <div class="control-group col-md-3">
+		      <!-- Subject -->
+		      <label class="control-label" for="subject"></label>
+		      <div class="controls">
+		      	<select class="subject input-xlarge form-control" name="subject[]" required>
+		        	{% for subject in subjects %}
+		        		<option value="{{ subject.id }}">{{ subject.title }}</option>
+		        	{% endfor %}
+		        </select>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+
+		    <div class="control-group col-md-2">
+		      <!-- Date -->
+		      <label class="control-label" for="test_date"></label>
+		      <div class="controls">
+		        <input type="date" name="test_date[]" value="{{ now }}" class="test_date input-xlarge form-control" required>
+		        <p class="help-block"></p>
+		      </div>
+		    </div>
+		  </fieldset>
+		{% endfor %}
+		</div>
+
+		<div class="control-group">
+	      <!-- Button -->
+	      <div class="controls">
+	        <button class="btn btn-success">Add</button>
+	      </div>
+		</div>
+	</form>
+{% endblock %}

@@ -36,7 +36,7 @@
 					</div>
 				</div>
 
-				<button class="btn btn-info">See Details</button>
+				<a href="{{ url_for('organization_classes', handle=handle, action='view', class_id=class.id ) }}"><button class="btn btn-info">See Details</button></a>
 				<hr/>
 			</div>
 		{% endfor %}

@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	Viewing {{ _class.name }}
+{% endblock %}
+
+{% block main %}
+	<h1>{{ _class.name }} General Info</h1>
+	<h4>Total Students: {{ students|length }}</h4>
+	<h4>Average Percentage: (average of each students average percentage)</h4>
+	<h4>Class Rank: (Average % as compared to other classes)</h4>
+
+	<h1>{{ _class.name }} Students Info</h1>
+	{% if students|length < 1 %}
+		<h3>Nothing to see here :(</h3>
+		<p>You probably haven't added any students yet!</p>
+	{% else %}
+		<div class="container">
+			<div class="row">
+				<div class="col-md-3"><h4>Name</h4></div>
+				<div class="col-md-1"><h4>Gender</h4></div>
+				<div class="col-md-2"><h4>Date of Admission</h4></div>
+				<div class="col-md-1"><h4>Details</h4></div>
+			</div>
+			{% for student in students %}
+				<div class="row">
+					<div class="col-md-3" style="text-transform: capitalize;">{{ student.first_name }} {{ student.last_name }}</div>
+					<div class="col-md-1">{{ student.gender|gender }}</div>
+					<div class="col-md-2">{{ student.admitted_on }}</div>
+					<div class="col-md-1">
+						<a href="{{ url_for('organization_students', handle=handle, action='view', student_id=student.id ) }}"><button class="btn btn-info">See Details</button></a>
+					</div>
+				</div>
+				<hr/>
+			{% endfor %}
+		</div>
+	{% endif %}
+{% endblock %}

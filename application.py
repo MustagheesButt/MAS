@@ -32,6 +32,9 @@ db = SQL("mysql://" + DB_USERNAME + ":" + DB_PASSWORD + "@" + DB_SERVER + "/" + 
 # connect to user accounts database
 users_db = SQL("mysql://" + DB_USERNAME + ":" + DB_PASSWORD + "@" + DB_SERVER + "/" + DB_DATABASE_USERS)
 
+# Register Filters
+app.jinja_env.filters["gender"] = gender
+
 @app.route("/")
 def index():
 	return render_template("home.html")
@@ -120,6 +123,19 @@ def register():
 		row = users_db.execute("SELECT full_name FROM users WHERE id = :id", id = user_id)
 
 		session["full_name"] = row["full_name"]
+
+		# send an email
+		envelope = Envelope(
+			to_addr   = new_user['email'],
+			subject   = api.config['WELCOME_EMAIL_SUBJECT'],
+			text_body = render_template('emails/new_user.txt'),
+			html_body = render_template('emails/new_user.html'))
+		def sender():
+			envelopes.connstack.push_connection(conn)
+			smtp = envelopes.connstack.get_current_connection()
+			smtp.send(envelope)
+			envelopes.connstack.pop_connection()
+		gevent.spawn(sender)
 		
 		flash("You have been registered successfully! :)")
 		return redirect(url_for("dashboard"))
@@ -223,12 +239,27 @@ def dashboard_new_organization():
 		""".format(request.form["handle"]))
 
 		# SUBJECTS
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_subjects`
+			(
+			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`title` TEXT NOT NULL
+			) DEFAULT CHARSET = utf8
+		""".format(request.form["handle"]))
 
-		# MATRIC_MARKS
-
-		# INTER_MARKS
+		# SPECIAL INFO (Matric/Inter/SAT/Any-Entry-Test marks)
 
 		# TESTS
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_tests`
+			(
+			`student_id` INT unsigned NOT NULL,
+			`obtained` INT unsigned NOT NULL,
+			`total` INT unsigned NOT NULL,
+			`subject_id` INT unsigned NOT NULL,
+			`test_date` DATE NOT NULL,
+			FOREIGN KEY (`student_id`) REFERENCES {0}_students(`id`),
+			FOREIGN KEY (`subject_id`) REFERENCES {0}_subjects(`id`)
+			) DEFAULT CHARSET = utf8
+		""".format(request.form["handle"]))
 
 		# FEES
 
@@ -262,17 +293,17 @@ def dashboard_account():
 @login_required
 def organization(handle):
 	return render_template("organization/dashboard.html",
-		organization = db.execute("SELECT title FROM organizations WHERE handle = :handle", handle = handle)[0],
-		n_classes = len(db.execute("SELECT id FROM {}_classes".format(handle))),
-		n_students = len(db.execute("SELECT id FROM {}_students".format(handle))),
-		n_subjects = 0
+		organization = db.execute("SELECT `title`, `handle` FROM organizations WHERE handle = :handle", handle = handle)[0],
+		n_classes = len(db.execute("SELECT `id` FROM {}_classes".format(handle))),
+		n_students = len(db.execute("SELECT `id` FROM {}_students".format(handle))),
+		n_subjects = len(db.execute("SELECT `id` FROM {}_subjects".format(handle)))
 		)
 
 # organization classes
 @app.route("/organization/<handle>/classes/<action>", methods=['POST', 'GET'])
-@app.route("/organization/<handle>/classes/<action>/<_class>", methods=['POST', 'GET'])
+@app.route("/organization/<handle>/classes/<action>/<class_id>", methods=['POST', 'GET'])
 @login_required
-def organization_classes(handle, action, _class=None):
+def organization_classes(handle, action, class_id=None):
 	if request.method == "POST":
 		if action == "new":
 			if not request.form["name"] or not request.form["fee"]:
@@ -300,8 +331,15 @@ def organization_classes(handle, action, _class=None):
 			return render_template("organization/classes_create_new.html", handle=handle)
 		elif action == "modify":
 			return render_template("organization/classes_modify.html")
+		elif action == "view" and class_id:
+			return render_template("organization/classes_view_class.html",
+				handle = handle,
+				_class = db.execute("SELECT * FROM {}_classes WHERE id = {}".format(handle, class_id))[0],
+				students = db.execute("SELECT * FROM {}_students".format(handle))
+				)
 		elif action == "view":
 			return render_template("organization/classes_view.html",
+				handle = handle,
 				classes = db.execute("SELECT * FROM {}_classes".format(handle)),
 				nstudents = db.execute("SELECT `TABLE_ROWS` FROM information_schema.tables WHERE table_schema = '{}' AND `TABLE_NAME` = '{}_students'".format(DB_DATABASE_MAS, handle))[0]["TABLE_ROWS"]
 				)
@@ -310,9 +348,9 @@ def organization_classes(handle, action, _class=None):
 
 # organization students
 @app.route("/organization/<handle>/students/<action>", methods=['POST', 'GET'])
-@app.route("/organization/<handle>/students/<action>/<class_id>", methods=['POST', 'GET'])
+@app.route("/organization/<handle>/students/<action>/<student_id>", methods=['POST', 'GET'])
 @login_required
-def organization_students(handle, action, student=None):
+def organization_students(handle, action, student_id=None):
 	if request.method == "POST":
 		if action == "new":
 			records = len(request.form.getlist("first_name[]"))
@@ -366,14 +404,101 @@ def organization_students(handle, action, student=None):
 		if action == "new":
 			return render_template("organization/students_create_new.html",
 				handle = handle,
-				classes = db.execute("SELECT id, name FROM {}_classes".format(handle)),
+				classes = db.execute("SELECT `id`, `name` FROM {}_classes".format(handle)),
 				now = datetime.utcnow().strftime("%Y-%m-%d")
 				)
 		elif action == "modify":
 			return render_template("organization/students_modify.html")
+		elif action == "view" and student_id:
+			student = db.execute("SELECT `first_name`, `last_name`, `class_id`, `email` FROM {}_students WHERE `id` = {}".format(handle, student_id))[0]
+
+			return render_template("organization/students_view_student.html",
+				student = student,
+				class_name = db.execute("SELECT `name` FROM {}_classes WHERE `id` = {}".format(handle, student["class_id"]))[0]["name"]
+				)
 		elif action == "view":
 			return render_template("organization/students_view.html",
-				students = db.execute("SELECT first_name, last_name, class_id, email FROM {}_students".format(handle))
+				handle = handle,
+				students = db.execute("SELECT `id`, `first_name`, `last_name`, `class_id`, `email` FROM {}_students".format(handle)),
+				classes = db.execute("SELECT `name` FROM {}_classes".format(handle))
 				)
 		else:
 			return apology("Unknown action", ":(")
+
+# organization subjects
+@app.route("/organization/<handle>/subjects/<action>", methods=['POST', 'GET'])
+@login_required
+def organization_subjects(handle, action):
+	if request.method == "POST":
+		if action == "new":
+			records = len(request.form.getlist("title[]"))
+
+			for i in range(records):
+				title = request.form.getlist("title[]")[i]
+				if len(db.execute("SELECT `id` FROM {}_subjects WHERE title = :title".format(handle), title = title)) > 0:
+					return apology("Subject '{}' already exists".format(title), ":(")
+
+			for i in range(records):
+				db.execute("INSERT INTO {}_subjects (title) VALUES (:title)".format(handle),
+					title = request.form.getlist("title[]")[i]
+				)
+
+			flash("{} new subjects were created successfully.".format(records))
+			return redirect(url_for('organization', handle=handle))
+		elif action == "modify":
+			return "Do something..."
+		else:
+			return apology("Unknown action", ":(")
+	else:
+		if action == "new":
+			return render_template("organization/subjects_create_new.html", handle=handle)
+		elif action == "modify":
+			return render_template("organization/subjects_modify.html")
+		elif action == "view":
+			return render_template("organization/subjects_view.html",
+				subjects = db.execute("SELECT `title` FROM {}_subjects".format(handle))
+				)
+		else:
+			return apology("Unknown action", ":(")
+
+# organization tests
+@app.route("/organization/<handle>/tests/<action>", methods=['POST', 'GET'])
+@app.route("/organization/<handle>/tests/<action>/<class_id>", methods=['POST', 'GET'])
+@login_required
+def organization_tests(handle, action, class_id=None):
+	if request.method == "POST":
+		if action == "new":
+			records = len(request.form.getlist("id[]"))
+
+			for i in range(records):
+				db.execute("INSERT INTO {}_tests (`student_id`, `obtained`, `total`, `subject_id`, `test_date`) VALUES (:student_id, :obtained, :total, :subject_id, :test_date)".format(handle),
+					student_id = request.form.getlist("id[]")[i],
+					obtained = request.form.getlist("obtained[]")[i],
+					total = request.form.getlist("total[]")[i],
+					subject_id = request.form.getlist("subject[]")[i],
+					test_date = request.form.getlist("test_date[]")[i]
+				)
+
+			flash("{} new tests were added successfully.".format(records))
+			return redirect(url_for('organization', handle=handle))
+		elif action == "modify":
+			return "Do something..."
+		else:
+			return apology("Unknown action", ":(")
+	else:
+		if action == "new" and class_id or request.args.get("class_id"):
+			return render_template("organization/tests_create_new.html",
+				handle = handle,
+				subjects = db.execute("SELECT * FROM {}_subjects".format(handle)),
+				now = datetime.utcnow().strftime("%Y-%m-%d"),
+				students = db.execute("SELECT `id`, `first_name`, `last_name` FROM {}_students WHERE `class_id` = {}".format(handle, class_id or request.args.get("class_id")))
+				)
+		elif action == "modify":
+			return render_template("organization/tests_modify.html")
+		elif action == "view":
+			return render_template("organization/tests_view.html",
+				tests = db.execute("SELECT `title` FROM {}_subjects".format(handle))
+				)
+		else:
+			flash("Unknown action performed.")
+			return redirect(url_for('organization', handle=handle))

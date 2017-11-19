@@ -4,11 +4,15 @@ $(document).ready(function () {
 		var n = $(this).val(),
 			toRepeat = $(".to-repeat"),
 			toRepeatN = $(".to-repeat").length,
-			entity = $(this)[0].dataset.entity;
+			entity = $(this)[0].dataset.entity,
+			max = +$(this).attr("max");
 
-		if (n > 20) {
-			$(this).val(20);
-			n = 20;
+		if (n > max) {
+			$(this).val(max);
+			n = max;
+		} else if (n < 1) {
+			$(this).val(1);
+			n = 1;
 		}
 
 		var delta = n - toRepeatN;
@@ -24,5 +28,10 @@ $(document).ready(function () {
 				$(".append-to .to-repeat:last").remove();
 			}
 		}
+	});
+
+	/** CELESTIAL BINDER **/
+	$("input[data-bindto], select[data-bindto]").on("change", function () {
+		$($(this)[0].dataset.bindto).val($(this).val());
 	});
 });

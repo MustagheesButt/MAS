@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	New Subject
+{% endblock %}
+
+{% block main %}
+	<h2>Add New Subject</h2>
+	<p>One of the subjects that is being taught at your institute.</p>
+
+	<div class="container">
+		<h3>Global Modifiers</h3>
+
+		<div class="row">
+			<div class="col-md-3">
+				<div class="control-group">
+			      <!-- Count Selector -->
+			      <label class="control-label"  for="count">How many subjects to add?</label>
+			      <div class="controls">
+			        <input type="number" id="count" name="count" class="input-xlarge form-control" min="1" max="5" value="1" data-entity="subject" />
+			        <p class="help-block">You can add upto a maximum of 5 subjects at a time.</p>
+			      </div>
+			    </div>
+			</div>
+	    </div>
+	</div>
+	<hr/>
+
+	<form class="form-horizontal" action="{{ url_for('organization_subjects', handle=handle, action='new') }}" method="POST">
+		<div class="append-to">
+		  <fieldset class="to-repeat">
+		    <div class="control-group">
+		      <!-- Name/Title -->
+		      <label class="control-label"  for="title">Title</label>
+		      <div class="controls">
+		        <input type="text" id="title" name="title[]" placeholder="Title" class="input-xlarge form-control" required>
+		        <p class="help-block">The title of this subject. For example, <em>Mathematics</em>, <em>Science</em>, <em>Biology</em> etc.</p>
+		      </div>
+		    </div>
+		  </fieldset>
+		</div>
+
+		<div class="control-group">
+	      <!-- Button -->
+	      <div class="controls">
+	        <button class="btn btn-success">Add</button>
+	      </div>
+		</div>
+	</form>
+{% endblock %}
