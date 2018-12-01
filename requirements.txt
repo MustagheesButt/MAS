@@ -1,0 +1,7 @@
+flask
+flask-session
+passlib
+sqlalchemy
+sqlparse
+# six - if Python 2
+mysql-python

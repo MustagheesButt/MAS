@@ -34,4 +34,30 @@ $(document).ready(function () {
 	$("input[data-bindto], select[data-bindto]").on("change", function () {
 		$($(this)[0].dataset.bindto).val($(this).val());
 	});
+
+	/** LOGIN FUNCTIONS **/
+	NN.init({
+		client_id: 3,
+		scope: "id.username.first_name.last_name.email",
+
+		loginCallback: function (response) {
+			var url = new URL(window.location);
+			response.next = url.searchParams.get("next");
+			
+			$.post("/auth", response, function (data) {
+
+				console.log(data);
+
+				if (data.status == "error")
+					console.error(data.error);
+				else if (data.status == "success")
+					window.location = data.redirect_to;
+			});
+		}
+	});
+
+	$("#login-btn").click(function (e) {
+		e.preventDefault();
+		NN.login();
+	});
 });

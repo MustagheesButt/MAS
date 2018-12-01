@@ -55,12 +55,16 @@
 
 		<section class="col-md-6">
 			<h3>Classes <small>{{ n_classes }}</small></h3>
-			<p>These are your classes, otherwise known as grades. These are also your courses and degrees. Name them as precisely as possible. For example, <em>Class/Grade 9th - Section A</em>, or <em>Web Developement Course - Morning</em>, or <em>BSCS F16 M</em>.</p>
-			<ul>
-				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='new') }}">Create New Class(es)</a></li>
-				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='modify') }}">Modify Existing Class(es)</a></li>
-				<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='view') }}">View Class Records</a></li>
-			</ul>
+			{% if n_subjects < 1 %}
+				<p>Looks like you haven't added any subjects yet. To start adding classes, you must first add subjects so when you create classes, you can include subjects that are taught to those classes.</p>
+			{% else %}
+				<p>These are your classes, otherwise known as grades. These are also your courses and degrees. Name them as precisely as possible. For example, <em>Class/Grade 9th - Section A</em>, or <em>Web Developement Course - Morning</em>, or <em>BSCS F16 M</em>.</p>
+				<ul>
+					<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='new') }}">Create New Class(es)</a></li>
+					<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='modify') }}">Modify Existing Class(es)</a></li>
+					<li><a href="{{ url_for('organization_classes', handle=organization.handle, action='view') }}">View Class Records</a></li>
+				</ul>
+			{% endif %}
 		</section>
 	</div>
 
@@ -75,8 +79,35 @@
 		</section>
 
 		<section class="col-md-6">
-			<h3>Staff</h3>
-			<p>Coming soon</p>
+			<h3>Staff <small>{{ n_staff }}</small></h3>
+			<ul>
+				<li><a href="{{ url_for('organization_staff', handle=organization.handle, action='new') }}">Add New Staff</a></li>
+				<li><a href="{{ url_for('organization_staff', handle=organization.handle, action='modify') }}">Modify Existing Staff</a></li>
+				<li><a href="{{ url_for('organization_staff', handle=organization.handle, action='view') }}">View Staff Details</a></li>
+			</ul>
+		</section>
+	</div>
+
+	<div class="row">
+		<section class="col-md-6">
+			<h3>Positions <small>{{ n_positions }}</small></h3>
+			<ul>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='new') }}">Add New Position(s)</a></li>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='modify') }}">Modify Existing Positions</a></li>
+				<li><a href="{{ url_for('organization_subjects', handle=organization.handle, action='view') }}">View Positions</a></li>
+			</ul>
+		</section>
+
+		<section class="col-md-6">
+			<h3>Timetables <small> {{ n_classes and n_staff }}</small></h3>
+			{% if n_classes < 1 or n_staff < 1  %}
+				<p>You need at least 1 class and a staff member (teacher) before you can begin making timetables.</p>
+			{% else %}
+				<p>There are as many timetables as there are classes. You can view and edit them as you find fit.</p>
+				<ul>
+					<li><a href="{{ url_for('organization_timetables', handle=organization.handle, action='manage') }}">Launch TimeTable Manager</a></li>
+				</ul>
+			{% endif %}
 		</section>
 	</div>
 {% endblock %}

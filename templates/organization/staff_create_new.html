@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block title %}
+	New Subject
+{% endblock %}
+
+{% block main %}
+	<h2>Add New Staff</h2>
+	<p>Any staff, including teachers, that work at your institute.</p>
+
+	<div class="container">
+		<h3>Global Modifiers</h3>
+
+		<div class="row">
+			<div class="col-md-3">
+				<div class="control-group">
+			      <!-- Count Selector -->
+			      <label class="control-label"  for="count">How many staff to add?</label>
+			      <div class="controls">
+			        <input type="number" id="count" name="count" class="input-xlarge form-control" min="1" max="5" value="1" data-entity="subject" />
+			        <p class="help-block">You can add upto a maximum of 5 staff at a time.</p>
+			      </div>
+			    </div>
+			</div>
+	    </div>
+	</div>
+	<hr/>
+
+	<form class="form-horizontal" action="{{ url_for('organization_staff', handle=handle, action='new') }}" method="POST">
+		<div class="append-to">
+		  <fieldset class="to-repeat">
+		    <div class="control-group row">
+		      <div class="col-md-6">
+			      <!-- Name -->
+			      <label class="control-label"  for="title">Name</label>
+			      <div class="controls">
+			        <input type="text" name="name[]" placeholder="Title" class="name input-xlarge form-control" required>
+			        <p class="help-block">The title of this staff person.</p>
+			      </div>
+		      </div>
+
+		      <div class="col-md-6">
+			      <!-- Position of the staff member -->
+			      <label class="control-label"  for="title">Position</label>
+			      <div class="controls">
+			        <select name="position[]" class="position input-xlarge form-control" required>
+			        	{% for position in positions %}
+			        		<option value="{{ position.id }}">{{ position.title }}</option>
+			        	{% endfor %}
+			        </select>
+			        <p class="help-block">The position of this staff person.</p>
+			      </div>
+		      </div>
+		    </div>
+		  </fieldset>
+		</div>
+
+		<div class="control-group">
+	      <!-- Button -->
+	      <div class="controls">
+	        <button class="btn btn-success">Add</button>
+	      </div>
+		</div>
+	</form>
+{% endblock %}

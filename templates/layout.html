@@ -12,11 +12,6 @@
 
         <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet"/>
 
-        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-        <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
-
         <title>My Academia Studio: {% block title %}{% endblock %}</title>
 
     </head>
@@ -47,8 +42,7 @@
                             </ul>
                         {% else %}
                             <ul class="nav navbar-nav navbar-right">
-                                <li><a href="{{ url_for('register') }}">Register</a></li>
-                                <li><a href="{{ url_for('login') }}">Log In</a></li>
+                                <li><a href="#" id="login-btn">Login/Register</a></li>
                             </ul>
                         {% endif %}
                     </div>
@@ -68,6 +62,11 @@
             </main>
             
         </div>
+
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="https://accounts.notesnetwork.org/static/js/NN-SDK.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
 
         <footer class="container">
 	    	{% block footer %}{% endblock%}

@@ -1,13 +1,16 @@
-from flask import Flask, flash, redirect, request, render_template, session, url_for, abort
+from flask import Flask, flash, redirect, request, render_template, session, url_for, abort, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
 from passlib.apps import custom_app_context as pwd_context
 from datetime import datetime
+import pathlib
 
 from cs50 import SQL
 
 from helpers import *
 from constants import *
+
+from api import *
 
 app = Flask(__name__)
 
@@ -29,9 +32,6 @@ Session(app)
 # connect to MyAcademiaStudio database
 db = SQL("mysql://" + DB_USERNAME + ":" + DB_PASSWORD + "@" + DB_SERVER + "/" + DB_DATABASE_MAS)
 
-# connect to user accounts database
-users_db = SQL("mysql://" + DB_USERNAME + ":" + DB_PASSWORD + "@" + DB_SERVER + "/" + DB_DATABASE_USERS)
-
 # Register Filters
 app.jinja_env.filters["gender"] = gender
 
@@ -39,40 +39,80 @@ app.jinja_env.filters["gender"] = gender
 def index():
 	return render_template("home.html")
 
-@app.route("/login", methods=['POST', 'GET'])
-def login():
+@app.route("/receive_access_token", methods=['GET'])
+def receive_access_token():
+	return render_template("receive_access_token.html",
+		access_token = request.args.get('access_token'),
+		callback_status = request.args.get('callback')
+		)
+
+# either login or register
+@app.route("/auth", methods=['POST'])
+def auth():
 	# forget any user_id
 	session.clear()
 
-	# if user got here via POST (form submission)
-	if request.method == "POST":
-		if not request.form["username"]:
-			return apology("Please provide a username")
+	# validation
+	if not request.form["username"]:
+		return jsonify({"status": "error", "error": "Please provide a username"})
+	if not request.form["id"]:
+		return jsonify({"status": "error", "error": "Please provide a user id"})
+	
+	rows = db.execute("SELECT * FROM `accounts.users` WHERE `user_id` = :user_id", user_id = request.form["id"])
 
-		rows = users_db.execute("SELECT * FROM users WHERE username = :username", username = request.form["username"])
-			
+	# login
+	if len(rows) > 0:
 		# ensure username exists and password is correct
-		if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["password"]):
-			return apology("invalid username and/or password")
+		if len(rows) != 1:
+			return jsonify({"status": "error", "error": "Non-unique user_id passed."})
 
 		# remember which user has logged in
-		session["user_id"] = rows[0]["id"]
+		session["user_id"] = rows[0]["user_id"]
 		session["full_name"] = rows[0]["full_name"]
 
 		flash("You have been logged in! :)")
-
-		next = request.args.get('next')
-		# is_safe_url should check if the url is safe for redirects.
-		# See http://flask.pocoo.org/snippets/62/ for an example.
-		if not is_safe_url(next):
-			return abort(400)
-
-		# redirect user where they came from or to home page
-		return redirect(next or url_for("dashboard"))
-
-	# else if user got here via a GET
+	# register
 	else:
-		return render_template("login.html")
+		# validate and hash password
+		user_id = db.execute(
+			# TODO: update schema
+				"INSERT INTO `accounts.users` (user_id, email, full_name, profile_pic, registered_on) VALUES (:user_id, :email, :full_name, :profile_pic, :registered_on)",
+					user_id = request.form["id"],
+					email = request.form["email"],
+					full_name = request.form["first_name"] + " " + request.form["last_name"],
+					profile_pic = "\0",
+					registered_on = str( datetime.now().strftime("%Y-%m-%d") )
+				)
+
+		session["user_id"] = user_id
+
+		row = db.execute("SELECT `full_name` FROM `accounts.users` WHERE `user_id` = :user_id", user_id = user_id)[0]
+
+		session["full_name"] = row["full_name"]
+
+		# send an email
+		#envelope = Envelope(
+			# to_addr   = new_user['email'],
+			# subject   = api.config['WELCOME_EMAIL_SUBJECT'],
+			# text_body = render_template('emails/new_user.txt'),
+			# html_body = render_template('emails/new_user.html'))
+		# def sender():
+		# 	envelopes.connstack.push_connection(conn)
+		# 	smtp = envelopes.connstack.get_current_connection()
+		# 	smtp.send(envelope)
+		# 	envelopes.connstack.pop_connection()
+		# gevent.spawn(sender)
+		
+		flash("You have been registered successfully! :)")
+
+	next = request.form.get('next')
+	# is_safe_url should check if the url is safe for redirects.
+	# See http://flask.pocoo.org/snippets/62/ for an example.
+	if not is_safe_url(next):
+		return jsonify({"status": "error", "error": "`next` URL not safe"})
+
+	# redirect user where they came from or to home page
+	return jsonify({"status": "success", "redirect_to": next or url_for("dashboard")})
 
 @app.route("/logout")
 def logout():
@@ -82,72 +122,13 @@ def logout():
 	session.clear()
 
 	# redirect user to login form
-	return redirect(url_for("login"))
-
-@app.route("/register", methods=['POST', 'GET'])
-def register():
-	# if user got here via POST (form submission)
-	if request.method == "POST":
-
-		# username validation
-		if not request.form["username"]:
-			return apology("Please provide a username")
-
-		# validate email address
-
-		# check password length
-
-		row = users_db.execute("SELECT * FROM users WHERE username = :username", username = request.form["username"])
-		if len(row) > 0:
-			return "oops! there is already someone with that username."
-
-		# validate and hash password
-		if not request.form["password"] == request.form["password_confirm"]:
-			return apology("Password confirmation failed!")
-
-		hash = pwd_context.hash(request.form["password"])
-		user_id = users_db.execute(
-				"INSERT INTO users (username, email, password, full_name, registered_with, profile_pic, registered_on, about_me) VALUES (:username, :email, :password, :full_name, :registered_with, :profile_pic, :registered_on, :about_me)",
-					username = request.form["username"],
-					email = request.form["email"],
-					password = hash,
-					full_name = request.form["full-name"],
-					registered_with = "NN",
-					profile_pic = "\0",
-					registered_on = str( datetime.now().strftime("%Y-%m-%d") ),
-					about_me = "About myself..."
-				)
-
-		session["user_id"] = user_id
-
-		row = users_db.execute("SELECT full_name FROM users WHERE id = :id", id = user_id)
-
-		session["full_name"] = row["full_name"]
-
-		# send an email
-		envelope = Envelope(
-			to_addr   = new_user['email'],
-			subject   = api.config['WELCOME_EMAIL_SUBJECT'],
-			text_body = render_template('emails/new_user.txt'),
-			html_body = render_template('emails/new_user.html'))
-		def sender():
-			envelopes.connstack.push_connection(conn)
-			smtp = envelopes.connstack.get_current_connection()
-			smtp.send(envelope)
-			envelopes.connstack.pop_connection()
-		gevent.spawn(sender)
+	return redirect(url_for("index"))
 		
-		flash("You have been registered successfully! :)")
-		return redirect(url_for("dashboard"))
-	
-	# else if user got here via a GET
-	else:	
-		return render_template("register.html")
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
-	user_orgs = db.execute("SELECT * FROM organizations WHERE owner_id = :owner", owner = session["user_id"])
+	user_orgs = db.execute("SELECT * FROM `organizations` WHERE `owner_id` = :owner", owner = session["user_id"])
 	return render_template("dashboard/dashboard_default.html", user_orgs = user_orgs)
 
 @app.route("/dashboard/new_organization", methods=['POST', 'GET'])
@@ -166,7 +147,7 @@ def dashboard_new_organization():
 		# TODO: correctly verify all above rushed fields
 
 		# register new organization
-		db.execute("INSERT INTO organizations (owner_id, handle, title, type, email, phone, address, city, country) VALUES (:owner_id, :handle, :title, :type, :email, :phone, :address, :city, :country)",
+		db.execute("INSERT INTO `organizations` (owner_id, handle, title, type, email, phone, address, city, country) VALUES (:owner_id, :handle, :title, :type, :email, :phone, :address, :city, :country)",
 			owner_id = session["user_id"],
 			handle = request.form["handle"],
 			title = request.form["title"],
@@ -178,9 +159,31 @@ def dashboard_new_organization():
 			country = request.form["country"]
 		)
 
+		# make its folder
+		pathlib.Path('organizations/{0}/'.format(request.form['handle'])).mkdir(parents=True, exist_ok=True)
+
 		# Create required database tables
+		# ORGANIZATION CONTACTS - for storing all phone numbers of students, parents, staff etc
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_contacts`
+			(
+			`id` BIGINT(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`contact_type` VARCHAR(5) NOT NULL, # staff = STAFF, parents/guardians = PARNT, students = STDNT
+			`contact_id` BIGINT(20) unsigned NOT NULL,
+			`number` TEXT, # phone or mobile number
+			UNIQUE KEY `unique_contact` (`contact_id`, `contact_type`, `number`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
+
+		# SUBJECTS
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_subjects`
+			(
+			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`name` TEXT NOT NULL
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
+
 		# CLASSES
-		db.execute("""CREATE TABLE IF NOT EXISTS `{}_classes`
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_classes`
 			(
 			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			`name` VARCHAR(100) NOT NULL UNIQUE,
@@ -189,21 +192,23 @@ def dashboard_new_organization():
 			`fee` INT NOT NULL,
 			`timing_start` TIME,
 			`timing_end` TIME
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
 
-		# SUBJECTS
-		db.execute("""CREATE TABLE IF NOT EXISTS `{}_subjects`
+		# CLASS_SUBJECTS
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_class_subjects`
 			(
-			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			`name` TEXT NOT NULL
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
+			`class_id` INT unsigned NOT NULL,
+			`subject_id` INT unsigned NOT NULL,
+			FOREIGN KEY `class_id__class_subjects` (`class_id`) REFERENCES {0}_classes(`id`),
+			FOREIGN KEY `subject_id__class_subjects` (`subject_id`) REFERENCES {0}_subjects(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
 
 		# STUDENTS
 		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_students`
 			(
-			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`id` BIGINT(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
 			`first_name` TEXT NOT NULL,
 			`middle_name` TEXT,
 			`last_name` TEXT NOT NULL,
@@ -217,15 +222,15 @@ def dashboard_new_organization():
 			`city` TEXT NOT NULL,
 			`email` TEXT,
 			`phone` TEXT,
-			FOREIGN KEY (`class_id`) REFERENCES {0}_classes(`id`)
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
+			FOREIGN KEY `class_id__students` (`class_id`) REFERENCES {0}_classes(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
 
 		# PARENTS
 		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_guardians`
 			(
 			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			`student_id` INT unsigned NOT NULL,
+			`student_id` BIGINT(20) unsigned NOT NULL,
 			`first_name` TEXT NOT NULL,
 			`middle_name` TEXT,
 			`last_name` TEXT NOT NULL,
@@ -234,42 +239,84 @@ def dashboard_new_organization():
 			`occupation` TEXT,
 			`email` TEXT,
 			`phone` TEXT,
-			FOREIGN KEY (`student_id`) REFERENCES {0}_students(`id`)
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
-
-		# SUBJECTS
-		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_subjects`
-			(
-			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			`title` TEXT NOT NULL
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
+			FOREIGN KEY `student_id__guradians` (`student_id`) REFERENCES {0}_students(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
 
 		# SPECIAL INFO (Matric/Inter/SAT/Any-Entry-Test marks)
 
 		# TESTS
 		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_tests`
 			(
-			`student_id` INT unsigned NOT NULL,
-			`obtained` INT unsigned NOT NULL,
-			`total` INT unsigned NOT NULL,
+			`id` BIGINT(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`class_id` INT unsigned NOT NULL,
 			`subject_id` INT unsigned NOT NULL,
+			`total` INT unsigned NOT NULL,
 			`test_date` DATE NOT NULL,
-			FOREIGN KEY (`student_id`) REFERENCES {0}_students(`id`),
-			FOREIGN KEY (`subject_id`) REFERENCES {0}_subjects(`id`)
-			) DEFAULT CHARSET = utf8
-		""".format(request.form["handle"]))
+			FOREIGN KEY `class_id__tests` (`class_id`) REFERENCES {0}_classes(`id`),
+			FOREIGN KEY `subject_id__tests` (`subject_id`) REFERENCES {0}_subjects(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
+
+		# TESTS_GIVEN
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_tests_given`
+			(
+			`test_id` BIGINT(20) unsigned NOT NULL,
+			`student_id` BIGINT(20) unsigned NOT NULL,
+			`obtained` INT unsigned NOT NULL,
+			FOREIGN KEY `test_id__tests_given` (`test_id`) REFERENCES {0}_tests(`id`),
+			FOREIGN KEY `student_id__tests_given` (`student_id`) REFERENCES {0}_students(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
 
 		# FEES
-
-		# EMPLOYEES
-
-		# SALARIES
+		#db.execute("""CREATE TABLE IF NOT EXISTS `{0}_fees` ()""".format(request.form['handle']))
 
 		# POSITIONS
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_positions`
+			(
+			`id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`title` VARCHAR(60) NOT NULL
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
+		# fill in positions
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Teacher')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Professor')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Assistant Professor')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Principal')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Vice Principal')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Guard')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Housekeeping Staff')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Director')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Accountant')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Manager')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Librarian')".format(request.form['handle']))
+		db.execute("INSERT INTO {0}_positions (`title`) VALUES('Examiner')".format(request.form['handle']))
 
-		# POSITION_EMPLOYEE
+		# EMPLOYEES
+		db.execute("""CREATE TABLE IF NOT EXISTS `{0}_employees`
+			(
+			`id` BIGINT(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+			`first_name` TEXT NOT NULL,
+			`middle_name` TEXT,
+			`last_name` TEXT NOT NULL,
+			`picture_url` TEXT NOT NULL,
+			`phone_number_1` TEXT NOT NULL,
+			`phone_number_2` TEXT,
+			`address` TEXT NOT NULL,
+			`cnic` TEXT,
+			`joined_on` DATE NOT NULL,
+			`position_id` INT unsigned NOT NULL,
+			FOREIGN KEY `position_id__employees` (`position_id`) REFERENCES {0}_positions(`id`)
+			) DEFAULT CHARSET = utf8mb4
+		""".format(request.form['handle']))
+
+		# EMPLOYEE_QUALIFICATIONS
+		#db.execute("""CREATE TABLE IF NOT EXISTS `{0}_employee_qualifications` ()""".format(request.form['handle']))
+
+		# TIME_TABLES
+
+		# SALARIES
 
 		# organization created successfully
 		flash("New organization, titled '{}', was created successfully".format(request.form["title"]))
@@ -284,7 +331,7 @@ def dashboard_account():
 		return "TODO: oh wait just wait"
 	else:
 		return render_template("dashboard/dashboard_account.html",
-			user_orgs = db.execute("SELECT * FROM organizations WHERE owner_id = :owner",
+			user_orgs = db.execute("SELECT * FROM `organizations` WHERE `owner_id` = :owner",
 			owner = session["user_id"])
 			)
 
@@ -293,10 +340,12 @@ def dashboard_account():
 @login_required
 def organization(handle):
 	return render_template("organization/dashboard.html",
-		organization = db.execute("SELECT `title`, `handle` FROM organizations WHERE handle = :handle", handle = handle)[0],
+		organization = db.execute("SELECT `title`, `handle` FROM `organizations` WHERE `handle` = :handle", handle = handle)[0],
 		n_classes = len(db.execute("SELECT `id` FROM {}_classes".format(handle))),
 		n_students = len(db.execute("SELECT `id` FROM {}_students".format(handle))),
-		n_subjects = len(db.execute("SELECT `id` FROM {}_subjects".format(handle)))
+		n_subjects = len(db.execute("SELECT `id` FROM {}_subjects".format(handle))),
+		n_positions = len(db.execute("SELECT `id` FROM {}_positions".format(handle))),
+		n_staff = len(db.execute("SELECT `id` FROM {}_employees".format(handle)))
 		)
 
 # organization classes
@@ -305,6 +354,7 @@ def organization(handle):
 @login_required
 def organization_classes(handle, action, class_id=None):
 	if request.method == "POST":
+		# create a new class
 		if action == "new":
 			if not request.form["name"] or not request.form["fee"]:
 				return apology("Fill the form correctly")
@@ -320,6 +370,20 @@ def organization_classes(handle, action, class_id=None):
 				timing_end = request.form.get("timing_end") or None
 			)
 
+			# insert subjects into `class_subjects` table
+			subjects = request.form.getlist('subjects[]')
+			for subject in subjects:
+				db.execute("INSERT INTO {0}_class_subjects (`class_id`, `subject_id`) VALUES (:class_id, :subject_id)".format(handle),
+					class_id = class_id,
+					subject_id = subject
+				)
+
+			# create related timetable file
+			# on class creation, create its timetable file
+			pathlib.Path('organizations/{0}/timetables/'.format(handle)).mkdir(parents=True, exist_ok=True)
+			timetable_file = open('organizations/{0}/timetables/{1}.csv'.format(handle, class_id), 'w+')
+			timetable_file.close()
+
 			flash("New Class, titled '{}', was created successfully with id: {}".format(request.form["name"], class_id))
 			return redirect(url_for('organization', handle=handle))
 		elif action == "modify":
@@ -328,7 +392,10 @@ def organization_classes(handle, action, class_id=None):
 			return apology("Unknown action", ":(")
 	else:
 		if action == "new":
-			return render_template("organization/classes_create_new.html", handle=handle)
+			return render_template("organization/classes_create_new.html",
+				handle = handle,
+				subjects = db.execute("SELECT * FROM {}_subjects".format(handle))
+				)
 		elif action == "modify":
 			return render_template("organization/classes_modify.html")
 		elif action == "view" and class_id:
@@ -435,15 +502,15 @@ def organization_subjects(handle, action):
 
 			for i in range(records):
 				title = request.form.getlist("title[]")[i]
-				if len(db.execute("SELECT `id` FROM {}_subjects WHERE title = :title".format(handle), title = title)) > 0:
+				if len(db.execute("SELECT `id` FROM `{}_subjects` WHERE `name` = :title".format(handle), title = title)) > 0:
 					return apology("Subject '{}' already exists".format(title), ":(")
 
 			for i in range(records):
-				db.execute("INSERT INTO {}_subjects (title) VALUES (:title)".format(handle),
+				db.execute("INSERT INTO `{}_subjects` (name) VALUES (:title)".format(handle),
 					title = request.form.getlist("title[]")[i]
 				)
 
-			flash("{} new subjects were created successfully.".format(records))
+			flash("{} new subjects were added successfully.".format(records))
 			return redirect(url_for('organization', handle=handle))
 		elif action == "modify":
 			return "Do something..."
@@ -456,7 +523,7 @@ def organization_subjects(handle, action):
 			return render_template("organization/subjects_modify.html")
 		elif action == "view":
 			return render_template("organization/subjects_view.html",
-				subjects = db.execute("SELECT `title` FROM {}_subjects".format(handle))
+				subjects = db.execute("SELECT `name` FROM {}_subjects".format(handle))
 				)
 		else:
 			return apology("Unknown action", ":(")
@@ -502,3 +569,52 @@ def organization_tests(handle, action, class_id=None):
 		else:
 			flash("Unknown action performed.")
 			return redirect(url_for('organization', handle=handle))
+
+# organization staff
+# TODO
+@app.route("/organization/<handle>/staff/<action>", methods=['POST', 'GET'])
+@app.route("/organization/<handle>/staff/<action>/<class_id>", methods=['POST', 'GET'])
+@login_required
+def organization_staff(handle, action, class_id=None):
+	if request.method == "POST":
+		if action == "new":
+			records = len(request.form.getlist("id[]"))
+
+			for i in range(records):
+				db.execute("INSERT INTO {}_staff (`student_id`, `obtained`, `total`, `subject_id`, `test_date`) VALUES (:student_id, :obtained, :total, :subject_id, :test_date)".format(handle),
+					student_id = request.form.getlist("id[]")[i],
+					obtained = request.form.getlist("obtained[]")[i],
+					total = request.form.getlist("total[]")[i],
+					subject_id = request.form.getlist("subject[]")[i],
+					test_date = request.form.getlist("test_date[]")[i]
+				)
+
+			flash("{} new staff person(s) were added successfully.".format(records))
+			return redirect(url_for('organization', handle=handle))
+		elif action == "modify":
+			return "<h2>Not Implemented</h2>"
+		else:
+			return apology("Unknown action", ":(")
+	else:
+		if action == "new":
+			return render_template("organization/staff_create_new.html",
+				handle = handle,
+				positions = db.execute('SELECT * FROM {}_positions'.format(handle)),
+				now = datetime.utcnow().strftime("%Y-%m-%d"),
+				)
+		elif action == "modify":
+			return render_template("organization/staff_modify.html")
+		elif action == "view":
+			return render_template("organization/staff_view.html",
+				tests = db.execute("SELECT `title` FROM {}_subjects".format(handle))
+				)
+		else:
+			flash("Unknown action performed.")
+			return redirect(url_for('organization', handle=handle))
+
+# TimeTable Manager TODO
+@app.route("/organization/<handle>/timetables/<action>", methods=['POST', 'GET'])
+@app.route("/organization/<handle>/timetables/<action>/<class_id>", methods=['POST', 'GET'])
+@login_required
+def organization_timetables(handle, action, class_id=None):
+	return "Yare yare daze"

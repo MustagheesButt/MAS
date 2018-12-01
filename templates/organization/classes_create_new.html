@@ -12,55 +12,93 @@
 	  <fieldset>
 	    <div class="control-group">
 	      <!-- Name/Title -->
-	      <label class="control-label"  for="name">Name/Title</label>
+	      <label class="control-label" for="name">Name/Title</label>
 	      <div class="controls">
 	        <input type="text" id="name" name="name" placeholder="Name" class="input-xlarge form-control" required>
 	        <p class="help-block">Whatever you would like to call this class. For example, <em>Class 7th</em>, <em>First Year - Section A</em>, or <em>Computer Short Course - Evening</em>.</p>
 	      </div>
 	    </div>
 	 
-	    <div class="control-group">
-	      <!-- Starting date of the class -->
-	      <label class="control-label"  for="start_date">Start Date</label>
-	      <div class="controls">
-	        <input type="date" id="start_date" name="start_date" placeholder="Y/M/d" class="input-xlarge form-control">
-	        <p class="help-block">When is this class going to start.</p>
+	    <div class="control-group row">
+	      <div class="col-md-6">
+		      <!-- Starting date of the class -->
+		      <label class="control-label" for="start_date">Start Date</label>
+		      <div class="controls">
+		        <input type="date" id="start_date" name="start_date" placeholder="Y/M/d" class="input-xlarge form-control">
+		        <p class="help-block">When is this class going to start.</p>
+		      </div>
+	      </div>
+
+	      <div class="col-md-6">
+		      <!-- Ending date of the class -->
+		      <label class="control-label" for="end_date">End Date</label>
+		      <div class="controls">
+		        <input type="date" id="end_date" name="end_date" placeholder="Y/M/d" class="input-xlarge form-control">
+		        <p class="help-block">When is this class going to end.</p>
+		      </div>
 	      </div>
 	    </div>
 
-	    <div class="control-group">
-	      <!-- Ending date of the class -->
-	      <label class="control-label"  for="end_date">End Date</label>
-	      <div class="controls">
-	        <input type="date" id="end_date" name="end_date" placeholder="Y/M/d" class="input-xlarge form-control">
-	        <p class="help-block">When is this class going to end.</p>
-	      </div>
-	    </div>
-
-	    <div class="control-group">
+	    <div class="control-group row">
 	      <!-- Fee -->
-	      <label class="control-label"  for="fee">Monthly Fee</label>
-	      <div class="controls">
-	        <input type="number" id="fee" name="fee" placeholder="Fee" class="input-xlarge form-control" required>
-	        <p class="help-block">Whatever you are charging monthly.</p>
+	      <div class="col-md-6">
+		      <label class="control-label" for="fee">Fee</label>
+		      <div class="controls">
+		        <input type="number" id="fee" name="fee" placeholder="Fee" class="input-xlarge form-control" required>
+		        <p class="help-block">Whatever you are charging as tuition fee for this class.</p>
+		      </div>
+	      </div>
+
+	      <!-- Fee Duration -->
+	      <div class="col-md-6">
+		      <label class="control-label" for="fee-duration">Fee Duration</label>
+		      <div class="controls">
+		        <select id="fee-duration" name="fee_duration" class="input-xlarge form-control" required>
+		        	<option value="1">Daily</option>
+		        	<option value="7">Weekly</option>
+		        	<option value="30" selected="selected">Monthly</option>
+		        	<option value="90">3 Months</option>
+		        	<option value="180">6 Months</option>
+		        	<option value="365">Yearly</option>
+		        </select>
+		        <p class="help-block">The time period for which the fee is charged.</p>
+		      </div>
+	      </div>
+	    </div>
+
+	    <div class="control-group row">
+	      <div class="col-md-6">
+		      <!-- Starting Time of the class -->
+		      <label class="control-label" for="start_time">Start Time</label>
+		      <div class="controls">
+		        <input type="time" id="start_time" name="timing_start" placeholder="H:M" value="07:30" class="input-xlarge form-control">
+		        <p class="help-block">Daily starting time of the class.</p>
+		      </div>
+	      </div>
+
+	      <div class="col-md-6">
+		      <!-- Ending Time of the class -->
+		      <label class="control-label" for="end_time">End Time</label>
+		      <div class="controls">
+		        <input type="time" id="end_time" name="timing_end" placeholder="H:M" value="02:00" class="input-xlarge form-control">
+		        <p class="help-block">Daily ending time of the class.</p>
+		      </div>
 	      </div>
 	    </div>
 
 	    <div class="control-group">
-	      <!-- Starting Time of the class -->
-	      <label class="control-label"  for="start_time">Start Time</label>
+	      <!-- Subjects taught to the class -->
+	      <label class="control-label" for="subjects">Subjects</label>
 	      <div class="controls">
-	        <input type="time" id="start_time" name="start_time" placeholder="H:M" class="input-xlarge form-control">
-	        <p class="help-block">Daily starting time of the class.</p>
-	      </div>
-	    </div>
-
-	    <div class="control-group">
-	      <!-- Ending Time of the class -->
-	      <label class="control-label"  for="end_time">End Time</label>
-	      <div class="controls">
-	        <input type="time" id="end_time" name="end_time" placeholder="H:M" class="input-xlarge form-control">
-	        <p class="help-block">Daily ending time of the class.</p>
+	      	{% for subject in subjects %}
+	      		<div class="form-check">
+				  <input class="form-check-input subjects" type="checkbox" name="subjects[]" value="{{ subject.id }}">
+				  <label class="form-check-label" for="subjects">
+				    {{ subject.name }}
+				  </label>
+				</div>
+	        {% endfor %}
+	        <p class="help-block">Select all subjects that are taught to this class.</p>
 	      </div>
 	    </div>
 	 
